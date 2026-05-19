@@ -1,0 +1,73 @@
+.Body{
+  display:flex;
+  flex-direction: column;
+  
+}
+
+.heading{
+  transform: translate(-0%,0);
+  font-size: 5vw;
+}
+p{
+  color: black;
+  font-family: Lora;
+  width:40vw;
+  font-size: 1.5vw;
+}
+.split{
+  display: flex;
+  gap:7vw;
+}
+.header {
+  background-image: url('https://images.pexels.com/photos/4989144/pexels-photo-4989144.jpeg'), linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3));
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 60vh;
+}
+.mbut{
+  transform: translate(10%,0%);
+}
+
+button{
+  border-radius: 1vw;
+  width:15vw;
+  height:5vh;
+  background-color: rgb(14, 44, 88);
+  color:white;
+}
+
+header{
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid rgb(14, 44, 88);
+    box-shadow: 0 10px 6px rgba(0, 0, 0, 0.1);
+
+}
+.headerlinks{
+  display: flex;
+  width: 60vw;
+  justify-content: space-between;
+  transform: translate(-10%,30%);
+}
+
+header a{
+  font-size: 1.5vw;
+
+}
+dialog{
+  
+  justify-content: center;
+  align-items: center;
+  width:40vw;
+  height: 50vh;
+  button{
+    background-color: rgb(74, 95, 109);
+  }
+  p{
+    font-size:2vw;
+    color:rgb(100, 59, 66);
+    font-family: Bree Serif;
+  }
+
+}
