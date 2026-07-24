@@ -1,4 +1,36 @@
+## Engineering Challenges & Solutions
 
+Building this multi-agent WhatsApp assistant for medical appointments came with a handful of gnarly bugs that took some real debugging to track down.
+
+### 1. The agent would just... go silent
+
+Early on, the assistant would sometimes just stop responding — no error, no crash, nothing. The user would send a message and just get left on read.
+
+Turned out this was coming from a few places at once: broken `async/await` chains that never resolved properly, `JSON.parse` blowing up on messy LLM output and killing the flow silently, and some code paths that just ended without ever calling `this.reply()`.
+
+**Fix:** Wrapped every parser in `try...catch` with proper logging, and added a fallback so the user always gets *some* response even when something breaks internally.
+
+### 2. It kept treating questions like form fields
+
+If someone asked something open-ended like *"can you give me options?"*, the agent would just reply with a canned line like *"I've taken note that..."* instead of actually answering.
+
+The problem was every incoming message got funneled straight into `Agent.three()`, which is really only built for pulling structured data out of messages (missing fields, etc.) — not for answering questions.
+
+**Fix:** Added proper intent handling so queries about location or practice details get routed to the right place (`Agent.six()`, `getEssay()`) before the flow falls back to form-filling mode.
+
+### 3. The bot got confused about who's who
+
+At one point the LLM extracted its own name — "Hlulani" — and saved it as the *patient's* name. Same thing happened with "a general practitioner" ending up in the `doctor` column when it was really just part of the assistant's own dialogue.
+
+Basically, when the model looked back over the conversation history, it lost track of which lines were the assistant talking and which were the patient.
+
+**Fix:** Added explicit negative constraints in the `Agent.one()` system prompt — telling it directly not to map assistant text onto patient fields — plus validation checks on what actually counts as a valid medical title.
+
+### 4. Dates like "9am tomorrow" kept breaking the database
+
+People don't talk in ISO format — they say "next Monday at 2pm" or "9am tomorrow" — but the database only accepts proper timestamp strings, so these were failing on insert.
+
+**Fix:** Injected the current date/time (`currentIso`) directly into the `Agent.one()` context, so the model always has a reference point and is forced to convert whatever the user says into a clean ISO 8601 UTC string before it ever touches the database.
 # Rihanyo
 
 **An AI-assisted appointment booking platform for practices.**
