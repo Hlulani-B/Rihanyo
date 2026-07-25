@@ -40,6 +40,27 @@ None of that felt like much on its own but it added up fast and the daily token 
 
 Fix: capped how much history and action log gets sent per call to just the most recent messages instead of the full thing. Also switched the clash checker to only pull appointments for the same doctor instead of dumping the whole table. Added a minimum gap between AI calls to stay under the requests per minute limit and made the retry logic smart enough to recognize when it's actually hit a daily token cap versus a normal rate limit so it stops retrying immediately instead of wasting more of the budget on a wall that won't clear for half an hour.
 
+
+## Challenges We Faced
+
+Building Rihanyo meant relying entirely on free tier AI providers since this was a solo student project with no budget for paid API access. That decision came with real tradeoffs. Early on the backend leaned on a single provider and whenever that provider hit its daily quota the entire booking flow would grind to a halt with no way to recover until the next day. The fix was building a proper fallback chain across five different providers including Groq OpenRouter Cerebras and Hugging Face so that if one runs dry the system quietly moves to the next without the patient ever noticing a gap in service.
+
+**How it was fixed:** A multi provider fallback chain was built so the assistant tries Groq first then OpenRouter then Cerebras then Hugging Face until one of them responds successfully.
+
+That fallback chain introduced its own problem. A provider that had already failed would keep getting retried on every single incoming message which meant patients were sometimes waiting minutes for a reply while the backend patiently worked through a list of providers that were never going to answer. Solving this meant adding a cooldown system backed by Supabase so a provider that just failed gets skipped instantly for the next few minutes instead of being retried from scratch every time. Since Cloud Functions instances can spin up fresh at any moment a simple in memory solution would not have survived a cold start so the cooldown state needed to live somewhere durable.
+
+**How it was fixed:** A cooldown table was added in Supabase so a provider that fails gets marked and skipped automatically for a few minutes instead of being retried on every message and this state survives even if the backend restarts.
+
+Another subtle issue came from how much conversation history got sent to the AI on every call. Trimming that history too aggressively caused the assistant to forget what it had already asked and it would repeat questions the patient had already answered. Not trimming it at all solved the repetition but caused token usage to balloon and burned through the free tier limits even faster. Getting this balance right took a few iterations of capping the history at a reasonable size while deduplicating repeated entries so nothing important got lost and nothing wasteful got resent.
+
+**How it was fixed:** The history sent to the AI was capped at a sensible size and duplicate entries were removed so the assistant keeps enough memory to avoid repeating itself without sending more than it actually needs.
+
+There was also a period where the assistant would answer questions about doctors and practices with details that sounded completely plausible but were not actually real. The essay containing real practice information was sometimes falling outside the trimmed context window by the time a follow up question came in so the AI filled the gap with invented specialties and names. Fixing this meant treating that piece of information as something that always needed to be fetched fresh and explicitly telling the AI never to state anything it could not verify from the data it was given.
+
+**How it was fixed:** The practice essay is now fetched directly every time it is needed instead of relying on a trimmed history window and the AI is explicitly instructed to only answer from that verified information and never guess.
+
+None of these were dramatic failures. They were the kind of small persistent issues that only show up once real conversations start happening and they taught me a lot about how fragile an AI powered system can be if you do not think carefully about cost latency and grounding from the very beginning.
+None of these were dramatic failures. They were the kind of small persistent issues that only show up once real conversations start happening and they taught me a lot about how fragile an AI powered system can be if you do not think carefully about cost latency and grounding from the very beginning.
 # Rihanyo
 
 **An AI assisted appointment booking platform for practices.**
