@@ -1,6 +1,6 @@
-## Engineering Challenges & Solutions
 
-Building this multi agent WhatsApp assistant for medical appointments came with a handful of gnarly bugs that took some real debugging to track down.
+
+
 
 ### 1. The agent would just go silent
 
