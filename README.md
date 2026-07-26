@@ -58,6 +58,39 @@ Another subtle issue came from how much conversation history got sent to the AI 
 There was also a period where the assistant would answer questions about doctors and practices with details that sounded completely plausible but were not actually real. The essay containing real practice information was sometimes falling outside the trimmed context window by the time a follow up question came in so the AI filled the gap with invented specialties and names. Fixing this meant treating that piece of information as something that always needed to be fetched fresh and explicitly telling the AI never to state anything it could not verify from the data it was given.
 
 **How it was fixed:** The practice essay is now fetched directly every time it is needed instead of relying on a trimmed history window and the AI is explicitly instructed to only answer from that verified information and never guess.
+###  Firestore project mismatch (the big one)
+
+**Symptom:** `Agent.eight()` kept telling patients "no doctors available" even after location, radius, and other fields were confirmed. Logs showed:
+**Root cause:** Two separate Firebase projects existed — `patient-9e998` (where the Cloud Function is deployed and where `admin.credential.applicationDefault()` authenticates) and `rihanyo-2ed` (where the actual `practiceProfiles` data lives, and where the web app's client SDK config points). The backend was faithfully querying `patient-9e998`, which either has no Firestore data or no database provisioned — the query wasn't wrong, it was just pointed at the wrong project the whole time.
+
+**Fix in progress:** Migrating the backend to run entirely under `rihanyo-2ed` (`firebase use rihanyo-2ed && firebase deploy --only functions`) so the Admin SDK's `applicationDefault()` credential and the actual data live in the same place. Cross-project service account keys were considered as a stopgap but a full redeploy under one project is the cleaner long-term fix.
+
+**Lesson:** when the client SDK config and backend Admin SDK reference different `projectId`s, everything will look like it's working (no crashes, clean error handling) while quietly reading from an empty project. Always double check `projectId` matches across `firebaseConfig` (web) and wherever the Admin SDK initializes.
+
+###  Silent failures masking as "no data"
+
+Several places in the codebase (`getAddressAndId`, `getCoordinates`, `getNearestPractices`) catch every error and return `[]` or `null` on failure. This is good defensive practice for uptime — the bot never crashes mid-conversation — but it means a genuine outage (wrong project, expired API, rate limit) looks *identical* to "there really is no data" from the AI's perspective. Worth eventually adding a distinct error-state signal so `eight()` can say "I'm having trouble right now" instead of confidently claiming zero practices exist.
+
+###  `Agent.five()` conflict check — falsy return bug
+
+`five()` (schedule clash checker) returns `undefined` on its early-return error paths (Supabase failure, AI parse failure) instead of an explicit `true`/`false`. Since `undefined` is falsy just like `false`, `Agent.one()`'s check:
+```js
+const conflict = await this.five(parsed.value);
+if (conflict) { return; }
+```
+would silently fall through and save the appointment time anyway, even after `five()` already told the user something went wrong. Fixed by making both error paths `return true` explicitly, so `one()` correctly halts instead of double-replying.
+
+###  `Practice.getEssay()` — object vs. ID string mismatch
+
+`getEssay()` expected an array of plain Firestore document ID strings, but `Agent.findPracticesAndPresent()` was actually passing it the full practice *objects* returned by `Distance.getNearestPractices()` (shaped like `{ id, name, address, distanceKm }`). This meant `getDocsByIds()` was calling `.doc(id)` with a whole object instead of a string ID — silently broken or producing garbage depending on SDK coercion. Fixed by having `getEssay()` normalize its input (accept either shape) and extract `.id` before querying Firestore, while preserving `distanceKm` for the AI summary.
+
+###  Radius stored as an untyped string
+
+`setRadius` saves whatever raw string the AI extraction returns (`"5"`, `"5km"`, `"10 kilometers"`, etc.) with no normalization. `getNearestPractices` then does `distance <= radius`, which JS coerces — fine for `"5"`, silently `NaN` (and therefore always `false`) for anything non-numeric like `"5km"`. Result: zero practices found, no error, no obvious cause. Fixed by coercing with `Number(radius)` and guarding against `NaN` before comparing.
+
+###  Router "why software development" moment 🙂
+
+Not a code bug, just a note to future-us: debugging a multi-agent AI pipeline across Cloud Functions, Firestore, Supabase, and two different Firebase projects *will* feel overwhelming some days. Most of what looked broken here wasn't bad code — it was environment/config drift (wrong project) and a couple of genuinely subtle async logic gaps. Both are completely normal in real systems, not a sign the approach is wrong.
 
 None of these were dramatic failures. They were the kind of small persistent issues that only show up once real conversations start happening and they taught me a lot about how fragile an AI powered system can be if you do not think carefully about cost latency and grounding from the very beginning.
 None of these were dramatic failures. They were the kind of small persistent issues that only show up once real conversations start happening and they taught me a lot about how fragile an AI powered system can be if you do not think carefully about cost latency and grounding from the very beginning.
