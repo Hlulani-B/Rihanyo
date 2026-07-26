@@ -36,14 +36,14 @@ export default function RihanyoLanding({
         <section style={styles.hero}>
           <div>
             <div style={styles.eyebrow}>
-              <span style={styles.eyebrowLine} /> Booking, handled over WhatsApp
+              <span style={styles.eyebrowLine} /> Booking, handled
             </div>
             <h1 style={styles.h1}>
               Your appointment,<br />
               <span style={styles.em}>sorted</span> — no hold music.
             </h1>
             <p style={styles.lede}>
-              Rihanyo is the secretary who never puts you on hold. Message her, tell her
+              Hlulani is the secretary who never puts you on hold. Message her, tell her
               what you need, and she'll find the nearest doctor, check for clashes, and
               lock in the time — all in the chat you already have open.
             </p>
@@ -64,8 +64,8 @@ export default function RihanyoLanding({
               
               tag="Patients"
               title="Book an appointment"
-              body="Tell Rihanyo where you are and what you need — she'll find a doctor nearby and lock in a time."
-              cta="Start on WhatsApp"
+              body="Tell Hlulani, the secretary, where you are and what you need — she'll find a doctor nearby and lock in a time."
+              cta="Start on Chat"
               style={styles.cardBook}
               onClick={()=>{navigate("/patient/signin")}}
             />
@@ -105,8 +105,8 @@ export default function RihanyoLanding({
           <div style={styles.steps}>
             <Step
               num="Say hello"
-              title="Message Rihanyo"
-              body="Open WhatsApp, say what you need. She asks for your name, location, and how far you're willing to travel."
+              title="Message Hlulani"
+              body="Open the chats, say what you need. She asks for your name, location, and how far you're willing to travel."
               first
             />
             <Step

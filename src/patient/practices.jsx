@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Practice } from '../functions/practice';
+import { Practice } from '../admin/functions/practice';
 
-export default function PracticeDashboard() {
+export default function Practicedashboard() {
   const [profiles, setProfiles] = useState([]);
   const [selectedPractice, setSelectedPractice] = useState(null);
   const [profileDetails, setProfileDetails] = useState(null);
@@ -126,9 +126,7 @@ export default function PracticeDashboard() {
                   <span style={styles.eyebrow}>practice id · {selectedPractice}</span>
                   <h2 style={styles.title}>{profileDetails.name || 'Unnamed Practice'}</h2>
                 </div>
-                <button onClick={() => handleDelete(selectedPractice)} style={styles.deleteButton}>
-                  Delete Practice
-                </button>
+                
               </div>
 
               <div style={styles.grid}>
