@@ -19,7 +19,7 @@ Rihanyo is built around two sides of the same problem: making it easy for a prac
 | Admin Dashboard |  Done | View and manage incoming requests |
 | WhatsApp AI Receptionist |  In progress | AI agent to converse with patients via WhatsApp Business API and book appointments automatically |
 | Nearest Location Search |  Done | Location based search so users can find the closest registered practice |
-| Chatbot Receptionist |  In progress | AI-powered chat widget on the website that greets visitors, answers common questions, and routes or books appointment requests |
+| Chatbot Receptionist |  Done | AI-powered chat widget on the website that greets visitors, answers common questions, and routes or books appointment requests |
 ## Tech Stack
 
 **Backend:** Node.js / Express
