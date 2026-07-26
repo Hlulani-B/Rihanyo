@@ -29,6 +29,15 @@ Rihanyo is built around two sides of the same problem: making it easy for a prac
 **AI Filtering:** LLM based relevance check on incoming requests
 **Planned:** WhatsApp Business API (AI receptionist), Geolocation API (nearest practice search)
 
+## AI Providers Used
+ 
+These are used as fallbacks — if one provider is down, slow, or hits its usage limit, the app automatically tries the next one so things keep working.
+ 
+- Cerebras
+- OpenRouter
+- Hugging Face
+- Groq
+- Gemini
 ## Setup and Installation
 
 **1. Clone the repository**
