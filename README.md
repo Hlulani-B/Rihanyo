@@ -1,5 +1,5 @@
 # Rihanyo
-
+Here is a link to a demo video -> https://youtu.be/AynBR9I_Myk
 **An AI assisted appointment booking platform for practices.**
 
 Rihanyo lets practices register and manage appointment requests with an AI powered admin filter that screens incoming requests for relevance before they reach a human.
