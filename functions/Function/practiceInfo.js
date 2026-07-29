@@ -214,6 +214,23 @@ OUTPUT FORMAT (JSON only):
 }`;
 
     const result = await AI(prompt);
-    return result || "Unable to generate summary at this time.";
+
+    if (!result) {
+      return "Unable to generate summary at this time.";
+    }
+
+    // AI() may return a JSON string or an already-parsed object — handle both,
+    // and pull out just the essay text instead of the wrapper object.
+    let parsed = result;
+    if (typeof result === "string") {
+      try {
+        parsed = JSON.parse(result);
+      } catch (err) {
+        console.error("Error parsing AI response as JSON in summarizePractices:", err, "raw:", result);
+        return "Unable to generate summary at this time.";
+      }
+    }
+
+    return parsed.practice || "Unable to generate summary at this time.";
   }
 }
